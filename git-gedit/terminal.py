@@ -1,15 +1,15 @@
 import gtk
-#import gedit
+import gedit
 import os
 import os.path
 from vte import Terminal
-
+from helpers import GitHelper
 class GitTerminalWidget():
     def __init__(self, window):
         self.window = window
-
+        
         self.bottom = window.get_bottom_panel()
-
+        
         self.uri = window.get_active_document().get_uri_for_display()
         self.term = Terminal()
         self.term.set_emulation("xterm")
@@ -30,7 +30,6 @@ class GitTerminalWidget():
         
         self.container = gtk.VBox(False)
 
-       # self.term.connect("child-exited", lambda term: term.fork_command('irb'))
         self.term.connect("child-exited", self.close_term_action_child_exited)
         
         self.table = gtk.Table(2,1,False)
@@ -51,27 +50,17 @@ class GitTerminalWidget():
         self.bottom.remove_item(self.container)
         self.bottom.hide()
         self.container.destroy()
-
-    def get_branch(self):
-        self.git_root = self.get_git_root(self.uri)
-        f = open(os.path.join(self.git_root,".git", "HEAD"))
-        return f.readlines()[0].split("/")[-1]
-    
-    def get_all_branchs(self):
-        self.git_root = self.get_git_root(self.uri)
-        diretorios = os.listdir(os.path.join(self.git_root,".git", "refs", "heads"))
-        return diretorios
-        
     
     def run(self,command=''):
-        self.git_root = self.get_git_root(self.uri)
-    
+        githelper = GitHelper()
+        self.git_root = githelper.get_git_root(self.uri)    
+
         if self.git_root=='':
             os.popen("notify-send -t 1600 -i gtk-dialog-info 'Alert!' 'Open a git project file before'")
         elif command.strip()=='':
             os.popen("notify-send -t 1600 -i gtk-dialog-info 'Alert!' 'Hey, type something!'")
         else:    
-            self.git_root = self.get_git_root(self.uri)
+
             self.term.feed_child("cd "+self.git_root+" \n")
             self.term.feed_child(command+"\n")
 
@@ -84,17 +73,4 @@ class GitTerminalWidget():
             self.bottom.activate_item(self.container)
             self.term.grab_focus()
 
-    def get_git_root(self, uri):
-        base_dir = os.path.dirname(uri)
-        depth = 10
-        git_root = ''
-        while depth > 0:
-            depth -= 1
-            app_dir = os.path.join(base_dir, '.git')
-            if os.path.isdir(app_dir):
-                git_root = base_dir
-                break
-            else:
-                base_dir = os.path.abspath(os.path.join(base_dir, '..'))
-
-        return git_root
+    

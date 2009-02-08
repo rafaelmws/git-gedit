@@ -1,0 +1,8 @@
+[Gedit Plugin]
+Loader=python
+Module=git-gedit
+IAge=2
+Name=Git Gedit
+Description=Run Git Comamnds
+Authors=Rafael Martins, Luiz Lemos
+Website=http://github

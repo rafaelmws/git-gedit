@@ -7,6 +7,7 @@ import gtk.glade
 import gconf
 from gettext import gettext as _
 from terminal import GitTerminalWidget
+from helpers import GitHelper
 
 ui_str = """
 <ui>
@@ -105,10 +106,8 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.entry = self.combo.get_children()[0]
         self.entry.set_completion(self.completion)
         
-        term = GitTerminalWidget(self.window)
-        self.branch_label.set_text(term.get_branch())
-        
-        self.combo_branchs.append_text("rafael")
+        self.githelper = GitHelper()
+        self.branch_label.set_text(self.githelper.get_branch(self.uri))
         
     def close_dialog(self):
         self.dialog.destroy()
