@@ -46,6 +46,7 @@ class GitHotcommandsPlugin(gedit.Plugin):
     def __init__(self):
         gedit.Plugin.__init__(self)
         self.githelper = GitHelper()
+        print "Iniciando o plugin Git-Gedit"
 
     def activate(self, window):
         self.window = window
@@ -95,6 +96,9 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.apply_button = glade_xml.get_widget('run_button')
         self.apply_button.connect('clicked', self.on_run)
 
+        self.branch_button = glade_xml.get_widget('branch_button')
+        self.branch_button.connect('clicked', self.on_change_branch)
+
         self.combo.set_model(self.model)
         self.combo.set_text_column(0)
         self.combo.connect('event-after',self.on_change)
@@ -111,8 +115,10 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.entry = self.combo.get_children()[0]
         self.entry.set_completion(self.completion)
         
+        self.entry_branch = self.combo_branchs.get_children()[0]
+        
         doc_uri = self.window.get_active_document().get_uri_for_display()
-        self.branch_label.set_text(self.githelper.get_branch(doc_uri))
+        self.branch_label.set_text(self.githelper.get_branch(doc_uri))   
         
     def close_dialog(self):
         self.dialog.destroy()
@@ -135,6 +141,11 @@ class GitHotcommandsPlugin(gedit.Plugin):
 
     def on_run(self, *args):
         c = self.entry.get_text()
+        self.run_command(c)
+
+    def on_change_branch(self, *args):
+        c = self.entry_branch.get_text()
+        c = "git checkout %s" % c
         self.run_command(c)
 
     def deactivate(self, window):
