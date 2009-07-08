@@ -7,7 +7,7 @@ import gtk.glade
 import gconf
 from gettext import gettext as _
 from terminal import GitTerminalWidget
-from helpers import GitHelper
+from githelper import GitHelper
 
 ui_str = """
 <ui>
@@ -45,6 +45,7 @@ GLADE_FILE = os.path.join(os.path.dirname(__file__), "commandrunner.glade")
 class GitHotcommandsPlugin(gedit.Plugin):
     def __init__(self):
         gedit.Plugin.__init__(self)
+        self.githelper = GitHelper()
 
     def activate(self, window):
         self.window = window
@@ -52,7 +53,6 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.bottom = window.get_bottom_panel()
 
         self.mount_list()
-
         actions = [
             ('GitHotcommands', gtk.STOCK_SELECT_COLOR, _('Git Hot Commands'), 
             '<Control><Alt>g', _("Press Ctrl+Alt+g to run commands"), self.on_open)
@@ -82,7 +82,9 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.dialog.set_transient_for(self.window)
 
         self.combo = glade_xml.get_widget('command_list')
-        self.combo_branchs = glade_xml.get_widget('branchs_combobox')
+        self.combo_branchs = glade_xml.get_widget('branchs_list')
+        
+        self.mount_branchs_list()
         
         self.description = glade_xml.get_widget('label-description')
         self.branch_label = glade_xml.get_widget('branch_label')
@@ -97,6 +99,9 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.combo.set_text_column(0)
         self.combo.connect('event-after',self.on_change)
 
+        self.combo_branchs.set_model(self.model_branchs)
+        self.combo_branchs.set_text_column(0)
+
         self.completion = gtk.EntryCompletion()
         self.completion.connect('match-selected', self.on_selected)
         
@@ -106,8 +111,8 @@ class GitHotcommandsPlugin(gedit.Plugin):
         self.entry = self.combo.get_children()[0]
         self.entry.set_completion(self.completion)
         
-        self.githelper = GitHelper()
-        self.branch_label.set_text(self.githelper.get_branch(self.uri))
+        doc_uri = self.window.get_active_document().get_uri_for_display()
+        self.branch_label.set_text(self.githelper.get_branch(doc_uri))
         
     def close_dialog(self):
         self.dialog.destroy()
@@ -142,3 +147,11 @@ class GitHotcommandsPlugin(gedit.Plugin):
         for command in all_commands_list.iterkeys():
             self.model.append([command])
 
+    def mount_branchs_list(self):
+        doc_uri = self.window.get_active_document().get_uri_for_display()
+        branch = self.githelper.get_branch(doc_uri)
+        self.model_branchs = gtk.ListStore(str)
+        
+        for command in self.githelper.get_all_branchs(doc_uri):
+            if branch != command:
+              self.model_branchs.append([command])

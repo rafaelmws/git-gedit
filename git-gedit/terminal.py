@@ -3,7 +3,8 @@ import gedit
 import os
 import os.path
 from vte import Terminal
-from helpers import GitHelper
+from githelper import GitHelper
+
 class GitTerminalWidget():
     def __init__(self, window):
         self.window = window
